@@ -58,7 +58,7 @@ def game():
                 print("Перебор! У вас больше 21. You got no money bitch")
                 return
         else:
-            print("Тормозииииим")
+            print("Тормозиииим")
 
             # Ход дилера
             print("Карты дилера:", dealer_card1_rank, dealer_card1_suit, "и", dealer_card2_rank, dealer_card2_suit)
