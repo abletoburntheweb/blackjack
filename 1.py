@@ -76,8 +76,6 @@ def game():
                 return
         else:
             print("Тормозииииим")
-            print("Сумма ваших карт:", player_score)
-            input('Нажмите Enter чтоб узнать карты дилера')
 
             # Ход дилера
             print("Карты дилера:", dealer_card1_rank, dealer_card1_suit, "и", dealer_card2_rank, dealer_card2_suit)
@@ -87,11 +85,7 @@ def game():
                 dealer_card_suit, dealer_card_rank = deal_card()
                 dealer_score += card_value(dealer_card_rank)
                 print("Дилер получил карту:", dealer_card_rank, dealer_card_suit)
-                input('Нажмите Enter чтоб узнать карты дилера')
-                print("=====================================")
-                print("Сумма ваших карт:", player_score)
                 print("Сумма карт дилера:", dealer_score)
-                print("=====================================")
 
             # ПРОВЕРОЧКА
             if dealer_score > 21:
