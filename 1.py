@@ -1,8 +1,12 @@
-#переписать функцию туза
+# переписать функцию туза
+# написать функцию сплита
+# написать возмжность дабла
+# добавить возможность ставить фишки
+# написать читы :)
 import random
 
 suits = ['♥', '♦', '♣', '♠']
-ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Валет', 'Дама', 'Король', 'Туз']
+ranks = ['2', 'Туз']
 
 
 def card_value(rank):
@@ -19,11 +23,20 @@ def deal_card():
     rank = random.choice(ranks)
     return suit, rank
 
-'''def hand_sum(hand):
-тут должна быть функция, проверяющая,
-если игроку выпал Туз, и сумма очков с ним 
-больше 21, то нужно вычесть 10 очков
-'''
+
+'''def player_score(rank):
+    player_sum = sum([card_value(card) for card in rank])
+    if 'Туз' in rank and player_sum > 21:
+        player_sum -= 10
+    return player_score'''
+
+
+def ace_check(hand, current_score):
+    for card in hand:
+        if 'Туз' in card and current_score > 21:
+            current_score -= 10
+    return current_score
+
 
 def game():
     print("Добро пожаловать!")
@@ -31,12 +44,16 @@ def game():
     # Карты игрока
     player_card1_suit, player_card1_rank = deal_card()
     player_card2_suit, player_card2_rank = deal_card()
-    player_score = card_value(player_card1_rank) + card_value(player_card2_rank)
+    player_hand = [(player_card1_suit, player_card1_rank), (player_card2_suit, player_card2_rank)]
+    player_score = sum([card_value(card[1]) for card in player_hand])
+    player_score = ace_check(player_hand, player_score)
 
     # Карты дилера
     dealer_card1_suit, dealer_card1_rank = deal_card()
     dealer_card2_suit, dealer_card2_rank = deal_card()
-    dealer_score = card_value(dealer_card1_rank) + card_value(dealer_card2_rank)
+    dealer_hand = [(dealer_card1_suit, dealer_card1_rank), (dealer_card2_suit, dealer_card2_rank)]
+    dealer_score = sum([card_value(card[1]) for card in dealer_hand])
+    dealer_score = ace_check(dealer_hand, dealer_score)
 
     print("Ваши карты:", player_card1_rank, player_card1_suit, "и", player_card2_rank, player_card2_suit)
     print("Сумма ваших карт:", player_score)
