@@ -7,7 +7,7 @@
 import random
 
 suits = ['♥', '♦', '♣', '♠']
-ranks = ['2', '3', '4',  'Туз']
+ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Валет', 'Дама', 'Король', 'Туз']
 
 
 def card_value(rank, player_score):
@@ -21,6 +21,7 @@ def card_value(rank, player_score):
     else:
         return int(rank)
 
+
 def deal_card():
     suit = random.choice(suits)
     rank = random.choice(ranks)
@@ -32,6 +33,7 @@ def player_score(cards):
     for card in cards:
         player_sum += card_value(card[1], player_sum)
     return player_sum
+
 
 '''def player_score(rank):
     player_sum = sum([card_value(card) for card in rank])
@@ -99,7 +101,7 @@ def game():
 
             while dealer_score < 17:
                 dealer_card_suit, dealer_card_rank = deal_card()
-                dealer_score += card_value(dealer_card_rank)
+                dealer_score += card_value(dealer_card_rank, dealer_score)
                 print("Дилер получил карту:", dealer_card_rank, dealer_card_suit)
                 print("Сумма карт дилера:", dealer_score)
 
