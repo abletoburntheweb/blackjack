@@ -1,6 +1,6 @@
-# переписать функцию туза
-# написать функцию сплита
-# написать возмжность дабла
+# переписать функцию туза ✔
+# написать функцию сплита ✖
+# написать возмжность дабла ✖
 # добавить возможность ставить фишки
 # добавить возможность сохранения прогресса
 # написать читы :)
@@ -35,6 +35,14 @@ def player_score(cards):
     return player_sum
 
 
+'''def split_hand(player_hand):
+    if player_hand[0][1] == player_hand[1][1]:  # Check if the ranks of the two cards are the same
+        new_hand1 = [player_hand[0], deal_card()]  # Create the first split hand
+        new_hand2 = [player_hand[1], deal_card()]  # Create the second split hand
+        return new_hand1, new_hand2
+    else:
+        return None'''
+
 '''def player_score(rank):
     player_sum = sum([card_value(card) for card in rank])
     if 'Туз' in rank and player_sum > 21:
@@ -54,8 +62,25 @@ def player_score(cards):
     return current_score'''
 
 
+def place_bet():
+    while True:
+        try:
+            bet_amount = int(input("Сколько хотите поставить? "))
+            if bet_amount <= 0:
+                print("Введите положительную сумму.")
+            else:
+                return bet_amount
+        except ValueError:
+            print("Введите числовое значение.")
+
+
 def game():
     print("Добро пожаловать!")
+
+    player_balance = 100  # Starting balance for the player
+    while player_balance > 0:
+        bet = place_bet()
+        player_balance -= bet
 
     # Карты игрока
     player_card1_suit, player_card1_rank = deal_card()
@@ -94,6 +119,7 @@ def game():
                 return
         else:
             print("Тормозииииим")
+            break
 
             # Ход дилера
             print("Карты дилера:", dealer_card1_rank, dealer_card1_suit, "и", dealer_card2_rank, dealer_card2_suit)
@@ -108,14 +134,19 @@ def game():
             # ПРОВЕРОЧКА
             if dealer_score > 21:
                 print("У дилера перебор! FLAWLESS VICTORY")
+                player_balance += bet * 2  # Player wins
             elif dealer_score > player_score:
                 print("У дилера больше очков. You got no money bitch")
             elif dealer_score < player_score:
                 print("У вас больше очков. YOU WIN")
+                player_balance += bet * 2  # Player wins
             else:
                 print("Ничья! У вас и у дилера одинаковое количество очков.")
+                player_balance += bet  # Return the bet amount on a draw
 
-            return
+            print("Ваш баланс:", player_balance)
+
+            print("У вас закончились фишки. Game over!")
 
 
 game()
