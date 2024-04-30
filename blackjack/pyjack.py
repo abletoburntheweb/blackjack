@@ -1,25 +1,29 @@
 import sys
 import random
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMessageBox
+from PyQt5.QtGui import QPixmap
+from cards import card_images
 
-suits = ['♥', '♦', '♣', '♠']
-ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Валет', 'Дама', 'Король', 'Туз']
+suits = ['hearts', 'diamonds', 'clubs', 'spades']
+ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
 
+# Translate suit symbols to words for the image dictionary
+suit_symbols = {'♥': 'hearts', '♦': 'diamonds', '♣': 'clubs', '♠': 'spades'}
 
 def card_value(rank, player_score):
-    if rank in ["Валет", "Дама", "Король"]:
+    if rank in ["jack", "queen", "king"]:
         return 10
-    elif rank == "Туз":
+    elif rank == "ace":
         return 11 if player_score + 11 <= 21 else 1
     else:
         return int(rank)
 
 
 def deal_card():
-    suit = random.choice(suits)
-    rank = random.choice(ranks)
+    suit = random.choice(suits)  # This will be 'hearts', 'diamonds', etc.
+    rank = random.choice(ranks)  # This will be '2', '3', ... 'jack', 'queen', etc.
     return suit, rank
-
 
 class BlackjackWindow(QMainWindow):
     def __init__(self):
@@ -70,27 +74,43 @@ class BlackjackWindow(QMainWindow):
         self.split_button.clicked.connect(self.split)
         self.split_button.setEnabled(False)
 
-        self.player_hand_label = QLabel("Your hands:", self)
-        self.dealer_hand_label = QLabel("Dealer's hand:", self)
+        # Добавляем подписи для рук игрока и дилера
+        self.player_hand_label = QLabel("Player's Hand:")
+        self.dealer_hand_label = QLabel("Dealer's Hand:")
 
-        layout = QVBoxLayout()
+        # Создаем layouts для отображения карт
+        self.player_hand_layout = QHBoxLayout()
+        self.dealer_hand_layout = QHBoxLayout()
+        self.split_hand_layout = QHBoxLayout()
+
+        # Основной layout
+        grid_layout = QVBoxLayout()
+
+        # Layout для ставок
         bet_hbox = QHBoxLayout()
-
         bet_hbox.addWidget(self.bet_label)
         bet_hbox.addWidget(self.bet_input)
         bet_hbox.addWidget(self.bet_button)
 
-        layout.addWidget(self.balance_label)
-        layout.addLayout(bet_hbox)
-        layout.addWidget(self.deal_button)
-        layout.addWidget(self.player_hand_label)
-        layout.addWidget(self.dealer_hand_label)
-        layout.addWidget(self.hit_button)
-        layout.addWidget(self.stand_button)
-        layout.addWidget(self.double_button)
-        layout.addWidget(self.split_button)
+        # Добавляем элементы в основной layout
+        grid_layout.addWidget(self.balance_label)
+        grid_layout.addLayout(bet_hbox)
+        grid_layout.addWidget(self.deal_button)
+        grid_layout.addWidget(self.player_hand_label)
+        grid_layout.addLayout(self.player_hand_layout)
+        grid_layout.addWidget(self.dealer_hand_label)
+        grid_layout.addLayout(self.dealer_hand_layout)
+        # Если есть split, можно добавить подпись и layout для split_hand
+        grid_layout.addLayout(self.split_hand_layout)
+        grid_layout.addWidget(self.hit_button)
+        grid_layout.addWidget(self.stand_button)
+        grid_layout.addWidget(self.double_button)
+        grid_layout.addWidget(self.split_button)
 
-        self.central_widget.setLayout(layout)
+        self.central_widget.setLayout(grid_layout)
+
+        # Устанавливаем минимальный размер для окна, чтобы все элементы уместились
+        self.setMinimumSize(640, 480)
 
     def place_bet(self):
         try:
@@ -108,13 +128,47 @@ class BlackjackWindow(QMainWindow):
     def update_balance_label(self):
         self.balance_label.setText(f"Balance: {self.player_balance}")
 
-    def update_hand_labels(self):
-        player_hand_str = ' '.join([f"{card[1]}{card[0]}" for card in self.player_hand])
-        split_hand_str = ' '.join([f"{card[1]}{card[0]}" for card in self.split_hand]) if self.is_split else ""
-        dealer_hand_str = ' '.join([f"{card[1]}{card[0]}" for card in self.dealer_hand[:-1]]) + " ??" if self.dealer_hand else ""
 
-        self.player_hand_label.setText(f"Your hand: {player_hand_str}\nSplit hand: {split_hand_str} (Score: {self.player_scores})")
-        self.dealer_hand_label.setText(f"Dealer's hand: {dealer_hand_str}")
+    def update_hand_labels(self):
+        # Clear the layouts
+        self.clear_layout(self.player_hand_layout)
+        self.clear_layout(self.dealer_hand_layout)
+        self.clear_layout(self.split_hand_layout)
+
+        # Update player's hand display
+        for card in self.player_hand:
+            card_key = f'{card[0]}-{card[1]}'
+            self.add_card_to_layout(card_key, self.player_hand_layout)
+
+        # Update dealer's hand display
+        for card in self.dealer_hand:
+            card_key = f'{card[0]}-{card[1]}'
+            self.add_card_to_layout(card_key, self.dealer_hand_layout)
+
+        # Update split hand display if there's a split
+        if self.is_split:
+            for card in self.split_hand:
+                card_key = f'{card[0]}-{card[1]}'
+                self.add_card_to_layout(card_key, self.split_hand_layout)
+
+    def clear_layout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def add_card_to_layout(self, card_key, layout):
+        card_image_path = card_images.get(card_key, "inverted-card.png")  # Use a default image if the key isn't found
+        card_label = QLabel()
+        pixmap = QPixmap(card_image_path)
+
+        # Проверяем, был ли загружен pixmap успешно
+        if pixmap.isNull():
+            QMessageBox.critical(self, "Error", f"Unable to load image: {card_image_path}")
+            return
+
+        card_label.setPixmap(pixmap.scaled(100, 150, aspectRatioMode=Qt.KeepAspectRatio))
+        layout.addWidget(card_label)
 
     def deal(self):
         self.player_hand = [deal_card(), deal_card()]
@@ -159,7 +213,7 @@ class BlackjackWindow(QMainWindow):
                 self.dealer_hand.append(new_card)
                 self.dealer_score += card_value(new_card[1], self.dealer_score)
 
-            self.dealer_hand_label.setText(f"Dealer's hand: {' '.join([f'{card[1]}{card[0]}' for card in self.dealer_hand])} (Score: {self.dealer_score})")
+            self.update_hand_labels()  # Обновляем интерфейс с текущим состоянием рук
 
             self.check_winner()
 
@@ -197,19 +251,22 @@ class BlackjackWindow(QMainWindow):
         self.split_button.setEnabled(False)
 
     def check_winner(self):
-        for score in self.player_scores:
+        # Предполагаем, что player_scores и dealer_score уже правильно рассчитаны
+        for index, score in enumerate(self.player_scores):
             if score > 21:
-                QMessageBox.information(self, 'Bust!', "You've busted!")
+                QMessageBox.information(self, 'Bust!', f"Hand {index + 1} has busted!")
             elif self.dealer_score > 21 or score > self.dealer_score:
-                QMessageBox.information(self, 'Winner!', "You win!")
+                QMessageBox.information(self, 'Winner!', f"Hand {index + 1} wins!")
                 self.player_balance += self.bet_amount * 2
-            elif self.dealer_score > score:
-                QMessageBox.information(self, 'Loser!', "Dealer wins!")
+            elif score < self.dealer_score:
+                QMessageBox.information(self, 'Loser!', f"Hand {index + 1} loses to the dealer.")
             else:
-                QMessageBox.information(self, 'Push!', "It's a tie!")
+                QMessageBox.information(self, 'Push!', f"Hand {index + 1} is a push (tie).")
                 self.player_balance += self.bet_amount
 
         self.update_balance_label()
+
+        # Обновляем интерфейс для следующего раунда
         self.end_round()
 
     def end_round(self):
@@ -231,15 +288,18 @@ class BlackjackWindow(QMainWindow):
             QMessageBox.warning(self, 'Game Over', "You've run out of money!")
             QApplication.instance().quit()
 
-    # ... Остальные методы
 
 
 def main():
+    print("Starting the application...")
     app = QApplication(sys.argv)
+    print("Application object created.")
     window = BlackjackWindow()
+    print("Window object created.")
     window.show()
+    print("Window should now be visible.")
     sys.exit(app.exec_())
-
+    print("Application execution has ended.")
 
 if __name__ == "__main__":
     main()
